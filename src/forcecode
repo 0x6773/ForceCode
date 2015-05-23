@@ -6,11 +6,22 @@ import requests
 import sys
 import os
 
-def getRound():
-    if len(sys.argv) < 2:
-        return raw_input("Enter the round number : ")
+def readConfig():
+    confPath = os.path.expanduser("~")
+    confFile = os.path.join(confPath, ".forcecode")
+
+    if not os.path.isfile(confFile):
+        fileI = open(confFile, "w")
+        fileI.write("editor:gedit:")
+        fileI.write("path:~/.forceCode/:")
+        fileI.close()
+        return ('gedit','~/.forceCode/')
+
     else:
-        return sys.argv[1]
+        file = open(confFile, "r")
+        data = file.read()
+        data = data.split(':')
+        return (data[1], data[3])
 
 class ForceCoders:
 
@@ -18,14 +29,16 @@ class ForceCoders:
         """
         Initializes the class
         """
-        self.round = getRound()
+        self.round = raw_input("Enter the round number : ")
+        assert self.round.isdigit()
         self.url = r"http://codeforces.com/contest/" + str(self.round) + r"/problems"
+        self.editor, self.tempPath = readConfig()
 
-        print("Connecting to CodeForces...")
+        print("Waiting to Connect to CodeForces...")
         self.soup = bs(requests.get(self.url).text)
-        print("Connected!")
+        print("Round " + self.round + " Connected!")
 
-        self.tmpPath = os.path.expanduser("~/.forceCode/" + str(self.round) + "/")
+        self.tmpPath = os.path.expanduser(os.path.join(self.tempPath + str(self.round)))
 
         self.data = [{}]
         self.input = []
@@ -121,17 +134,18 @@ class ForceCoders:
         """
         Save data to Disk
         """
+        fileN = ""
         for tgn in xrange(len(self.data)):
 
             tg = chr(ord('A') + tgn)
-            tagPath = self.tmpPath + tg + "/"
+            tagPath = os.path.join(self.tmpPath, tg)
 
             if not os.path.exists(tagPath):
                 os.makedirs(tagPath)
 
-            inputFile = tagPath + "input.txt"
-            outputFile = tagPath + "output.txt"
-            cppFile = tagPath + "program" + tg + ".cpp"
+            inputFile = os.path.join(tagPath, "input.txt")
+            outputFile = os.path.join(tagPath, "output.txt")
+            cppFile = os.path.join(tagPath, "program" + tg + ".cpp")
 
             fileI = open(inputFile, "w")
             for x in self.data[tgn]["input"]:
@@ -149,11 +163,6 @@ class ForceCoders:
                     fileO.write(x.encode('utf8'))
             fileO.close()
 
-            currDir = os.path.dirname(os.path.realpath(__file__))
-            #fileTemp = open(os.path.dirname(currDir) + "/src/template.cpp", "r")
-            #templateData = fileTemp.read()
-            #fileTemp.close()
-
             fileC = open(cppFile, "w")
             fileC.write("/*\n")
             try:
@@ -165,12 +174,16 @@ class ForceCoders:
             except:
                 fileC.write(self.data[tgn]["detail"].encode('utf8'))
             fileC.write("\n*/\n\n")
-            #fileC.write(templateData)
+
             fileC.close()
 
-            try:
-                os.system("atom " + cppFile)
-            except:
-                os.system("subl " + cppFile)
+            fileN = fileN + " " + cppFile
+
+        print("All files save to : " + self.tmpPath + ".")
+
+        if self.editor != "NONE":
+            print("Opening All files in " + self.editor + " editor.")
+            os.system(self.editor + " " + fileN)
+            
 
 bl = ForceCoders()
