@@ -44,7 +44,7 @@ setup(
     keywords = 'codeforces forcecoders',
     url = 'http://github.com/mafiya69/ForceCoders',
     packages=packages(),
-    scripts = ['src/forcecode'],
+    scripts = ['forcecode/forcecode.py'],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Topic :: Internet :: WWW/HTTP :: Indexing/Search',

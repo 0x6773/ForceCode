@@ -7,6 +7,9 @@ import sys
 import os
 
 def readConfig():
+    """
+    Read conf file and returns (editorName, pathToSave)
+    """
     confPath = os.path.expanduser("~")
     confFile = os.path.join(confPath, ".forcecode")
 
@@ -23,8 +26,10 @@ def readConfig():
         data = data.split(':')
         return (data[1], data[3])
 
-class ForceCoders:
-
+class forcecode:
+    """
+    Class to extract information from CodeForces Website
+    """
     def __init__(self):
         """
         Initializes the class
@@ -184,6 +189,99 @@ class ForceCoders:
         if self.editor != "NONE":
             print("Opening All files in " + self.editor + " editor.")
             os.system(self.editor + " " + fileN)
-            
 
-bl = ForceCoders()
+from glob import glob as globe
+
+def getCppFile():
+    """
+    Returns the CPP file which is to be investigated
+    """
+    allCppFile = globe("*.cpp")
+    if len(allCppFile) == 0 :
+        print("No C++ File found.")
+        sys.exit(1)
+    elif len(allCppFile) > 1:
+        print("More than one C++ files Found\nYou need to enter manually.")
+        cppFile = raw_input("Enter the Name of C++ file : ")
+        path = os.path.join(os.getcwd(), cppFile)
+        if not os.path.isfile(path):
+            print("No C++ File found with Name : " + cppFile)
+            sys.exit(1)
+        else:
+            return os.path.join(os.getcwd(), cppFile)
+    else:
+        print("C++ file found : " + allCppFile[0])
+        return os.path.join(os.getcwd(), allCppFile[0])
+
+def getInputFile():
+    """
+    Returns the input file
+    """
+    inputFile = globe("input.txt")
+    if len(inputFile) < 1:
+        print("No input file found.\nEnter manually.")
+        inputFile = raw_input("Enter input File : ")
+        path = os.path.join(os.getcwd(), intputFile)
+        if not os.path.isfile(path):
+            print("No File found with Name : " + cppFile)
+            sys.exit(1)
+        else:
+            return os.path.join(os.getcwd(), intputFile)
+    else:
+        print("Input File Found : " + inputFile[0])
+        return os.path.join(os.getcwd(), inputFile[0])
+
+def getOutputFile():
+    """
+    Returns the input file
+    """
+    outputFile = globe("output.txt")
+    if len(outputFile) == 1:
+        return os.path.join(os.getcwd(), outputFile[0])
+class forcecoderunner:
+    """
+    Code to run the C++ file
+    """
+    def __init__(self):
+        """
+        Initialises the Class
+        """
+        self.cppFile = getCppFile()
+        self.inputFile = getInputFile()
+        self.outputOut = os.path.join(os.getcwd(), os.path.splitext(self.cppFile)[0] + ".out")
+
+        self.command = "set -e;g++ -std=c++14 -Wall -Wextra -pedantic -pthread -O2 -Wshadow -Wformat=2 -Wfloat-equal -Wlogical-op -Wcast-qual -Wcast-align -fwhole-program -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC "
+        self.command = self.command + self.cppFile + " -o " + self.outputOut + " && " + self.outputOut + " < " + self.inputFile
+
+        poutput = os.popen(self.command).read().strip()
+
+        print("Output of your code : ")
+        print(poutput)
+
+        self.outputFile = getOutputFile()
+        if not self.outputFile is None:
+            file = open(self.outputFile, 'r')
+            eoutput = file.read().strip()
+
+            print("Currect Output : ")
+            print(eoutput)
+            if poutput == eoutput:
+                try:
+                    roundno = raw_input('Enter round number : ')
+                    if roundno.isdigit():
+                        os.system("xdg-open http://codeforces.com/contest/" + roundno + "/submit")
+                except:
+                    pass
+
+
+if __name__ == '__main__':
+    pass
+
+if sys.argv[1] == '-r':
+    f1 = forcecoderunner()
+
+elif sys.argv[1] == '-h':
+    getHelp()
+
+else:
+    bl = forcecode()
